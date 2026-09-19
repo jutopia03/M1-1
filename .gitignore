@@ -1,3 +1,11 @@
+# API 키 (절대 커밋 금지)
+.env
+
+# 수집 데이터 — KOBIS 오픈API 약관 제6조 2항에 따라 재배포하지 않음
+# 재현은 src/collect_boxoffice.py 로 가능
+data/*.csv
+data/*.json
+
 # Python
 __pycache__/
 *.py[cod]
@@ -8,6 +16,3 @@ venv/
 # OS
 .DS_Store
 Thumbs.db
-
-# 대용량 원본 데이터가 생기면 아래 주석 해제
-# data/raw/
