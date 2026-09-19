@@ -16,3 +16,6 @@ venv/
 # OS
 .DS_Store
 Thumbs.db
+
+# 레이아웃 확인용 임시 미리보기
+data/_preview_*.png
