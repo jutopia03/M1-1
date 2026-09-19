@@ -157,7 +157,40 @@
 
 ## 8. 재현 방법
 
+원본 데이터는 제공기관 약관에 따라 저장소에 포함하지 않았다. 따라서 **데이터를 먼저 수집한 뒤** 분석을 실행해야 한다.
+
+**1) 환경 준비** (Python 3.10 이상)
+
 ```bash
 pip install -r requirements.txt
-jupyter notebook analysis.ipynb   # 셀을 위에서부터 순서대로 실행
 ```
+
+**2) API 키 설정**
+
+`.env.example`을 `.env`로 복사한 뒤 `KOBIS_API_KEY` 값을 채운다.
+키 발급: https://www.kobis.or.kr/kobisopenapi/homepg/main/main.do
+(`.env`는 `.gitignore`에 등록되어 커밋되지 않는다.)
+
+**3) 데이터 수집** (약 5분)
+
+```bash
+python src/collect_boxoffice.py
+```
+
+- 2024-09-01 ~ 2026-08-31을 하루씩 730회 호출해 `data/raw_daily_boxoffice.csv`를 생성한다.
+- 중단되면 같은 명령을 다시 실행하면 된다. 이미 수집된 날짜는 건너뛰고 이어받는다.
+- 응답 필드만 먼저 확인하려면: `python src/collect_boxoffice.py --probe`
+
+**4) 분석 실행**
+
+```bash
+jupyter notebook analysis.ipynb
+```
+
+셀을 위에서부터 순서대로 실행하면 `images/`에 그래프 3개가 생성된다.
+
+**사용 라이브러리**: pandas, numpy, matplotlib, requests, python-dotenv, jupyter (버전은 `requirements.txt` 참조)
+
+---
+
+본 프로젝트는 영화진흥위원회 영화관입장권통합전산망(KOBIS) 오픈API를 이용하였습니다.
