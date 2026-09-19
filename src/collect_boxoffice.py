@@ -84,6 +84,15 @@ def load_done_dates() -> set:
         return {row["targetDt"] for row in csv.DictReader(f) if row.get("targetDt")}
 
 
+def mask(text: str, key: str) -> str:
+    """오류 메시지에 섞여 들어간 API 키를 가린다.
+
+    requests 의 예외 메시지에는 요청 URL이 그대로 포함되는데,
+    URL 쿼리에 키가 실려 있어 그대로 출력하면 키가 노출된다.
+    """
+    return str(text).replace(key, "***KEY***") if key else str(text)
+
+
 def fetch_one_day(key: str, target_dt: str) -> list:
     """하루치 TOP10 행 리스트를 반환. 실패 시 예외."""
     params = {"key": key, "targetDt": target_dt}
@@ -91,11 +100,14 @@ def fetch_one_day(key: str, target_dt: str) -> list:
     for attempt in range(1, MAX_RETRY + 1):
         try:
             res = requests.get(API_URL, params=params, timeout=TIMEOUT)
-            res.raise_for_status()
+            if res.status_code != 200:
+                raise RuntimeError(f"HTTP {res.status_code}")
             payload = res.json()
         except Exception as e:
             if attempt == MAX_RETRY:
-                raise RuntimeError(f"{target_dt} 요청 실패: {e}") from e
+                raise RuntimeError(
+                    f"{target_dt} 요청 실패: {mask(e, key)}"
+                ) from None
             time.sleep(2 * attempt)
             continue
 
@@ -123,9 +135,16 @@ def probe(key: str) -> None:
     target = START_DATE.strftime("%Y%m%d")
     print(f"[probe] {target} 하루치 호출\n")
 
-    res = requests.get(API_URL, params={"key": key, "targetDt": target},
-                       timeout=TIMEOUT)
-    payload = res.json()
+    try:
+        res = requests.get(API_URL, params={"key": key, "targetDt": target},
+                           timeout=TIMEOUT)
+        if res.status_code != 200:
+            sys.exit(f"[중단] HTTP {res.status_code}")
+        payload = res.json()
+    except SystemExit:
+        raise
+    except Exception as e:
+        sys.exit(f"[중단] 요청 실패: {mask(e, key)}")
 
     if "faultInfo" in payload:
         sys.exit(f"[중단] API 오류: {payload['faultInfo']}")
